@@ -15,9 +15,11 @@ zeebe:
 # This config switches importers between the provided
 # To use each of them, zeebe must be configured using hazelcast-exporter, kafka-exporter or redis-exporter, respectively
 # See the examples in docker/docker-compose.yml in services.zeebe-hazelcast, services.zeebe-kafka, services-zeebe-redis
-zeebe-importer: hazelcast
+zeebe-importer: kafka
 
 spring:
+  profiles:
+    active: kafka
   datasource:
     url: jdbc:h2:mem:zeebe-monitor;DB_CLOSE_DELAY=-1
     username: sa
@@ -43,7 +45,7 @@ spring:
   kafka:
     template:
       default-topic: zeebe
-    bootstrap-servers: localhost:9093
+    bootstrap-servers: localhost:9094
     properties:
       request.timeout.ms: 20000
       retry.backoff.ms: 500
@@ -74,7 +76,7 @@ server:
 
 logging:
   level:
-    root: ERROR
+    root: INFO
     io.zeebe: INFO
     io.zeebe.monitor: DEBUG
     com.hazelcast: WARN

@@ -3,3 +3,6 @@
 # To use each of them, zeebe must be configured using hazelcast-exporter, kafka-exporter or redis-exporter, respectively
 # See the examples in docker/docker-compose.yml in services.zeebe-hazelcast, services.zeebe-kafka, services-zeebe-redis
 zeebe-importer: kafka
+spring:
+  application:
+    name: with-kafka

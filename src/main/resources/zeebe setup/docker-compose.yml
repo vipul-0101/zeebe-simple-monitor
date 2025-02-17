@@ -1,0 +1,68 @@
+version: "3"
+networks:
+  zeebe_network:
+    driver: bridge
+services:
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.9
+    container_name: zookeeper
+    hostname: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      ALLOW_ANONYMOUS_LOGIN: yes
+    restart: always
+
+  kafka:
+    hostname: kafka
+    image: docker.io/bitnami/kafka:3.9
+    container_name: kafka
+    ports:
+      - "9092:9092"
+      - '9094:9094'
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://localhost:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,EXTERNAL:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    depends_on:
+      - zookeeper
+    networks:
+      - zeebe_network
+
+  zeebe:
+    container_name: zeebe
+    hostname: zeebe
+    image: camunda/zeebe:latest
+    ports:
+      - "26500:26500"
+      - "9600:9600"
+      - "5701:5701"
+    environment:
+      SPRING_CONFIG_ADDITIONAL_LOCATION: /usr/local/zeebe/config/exporter.yml
+      ZEEBE_BROKER_EXPORTERS_KAFKA_ARGS_PRODUCER_SERVERS: "kafka:9092"
+      ZEEBE_BROKER_CLUSTER_PARTITIONSCOUNT: 5
+    volumes:
+      - ./exporter.yml:/usr/local/zeebe/config/exporter.yml
+      - ./zeebe-kafka-exporter-3.1.1-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-kafka-exporter-3.1.1-jar-with-dependencies.jar
+    networks:
+      - zeebe_network
+    depends_on:
+      - kafka
+
+volumes:
+  postgres-zeebe-simple-monitor-data:
+    driver: local
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local

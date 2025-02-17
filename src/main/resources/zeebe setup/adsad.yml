@@ -1,0 +1,61 @@
+version: "3"
+
+networks:
+  zeebe_network:
+    driver: bridge
+
+services:
+  zeebe:
+    container_name: zeebe_broker
+    image: camunda/zeebe:latest
+    environment:
+      - ZEEBE_LOG_LEVEL=debug
+    ports:
+      - "26500:26500"
+      - "9600:9600"
+      - "5701:5701"
+    volumes:
+      - ./zeebe-hazelcast-exporter-jar-with-dependencies.jar:/usr/local/zeebe/exporters/zeebe-hazelcast-exporter-jar-with-dependencies.jar
+      - ./application.yaml:/usr/local/zeebe/config/application.yaml
+    networks:
+      - zeebe_network
+
+
+
+  simple-monitor-postgres:
+    container_name: zeebe-simple-monitor-postgres
+    image: ghcr.io/camunda-community-hub/zeebe-simple-monitor:2.5.2
+    environment:
+      - zeebe.client.broker.gateway-address=zeebe:26500
+      - zeebe.client.worker.hazelcast.connection=zeebe:5701
+      - zeebe.client.worker.hazelcast.clusterName=dev
+      - spring.datasource.url=jdbc:postgresql://postgres-zeebe-simple-monitor:5432/postgres
+      - spring.datasource.username=postgres
+      - spring.datasource.password=zeebe
+      - spring.datasource.driverClassName=org.postgresql.Driver
+      - spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+    ports:
+      - "8082:8082"
+    depends_on:
+      - zeebe
+      - postgres-zeebe-simple-monitor
+    networks:
+      - zeebe_network
+
+  postgres-zeebe-simple-monitor:
+    image: postgres:16.1
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: zeebe
+    volumes:
+      - postgres-zeebe-simple-monitor-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - zeebe_network
+
+
+
+volumes:
+  postgres-zeebe-simple-monitor-data:
+    driver: local

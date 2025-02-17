@@ -9,6 +9,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Component;
@@ -26,10 +27,11 @@ public class ZeebeKafkaService {
   @Autowired private RecordDeserializer deserializer;
   @Autowired private KafkaImportService kafkaImportService;
 
-  @KafkaListener(
-      topics = "${spring.kafka.template.default-topic}",
-      groupId = "${spring.kafka.group-id}")
+  @Value("${spring.kafka.template.default-topic}")
+  String  topic;
+  @KafkaListener( topicPattern = "zeebe-.*", groupId = "zeebe-consumer")
   public void listener(List<ConsumerRecord<String, byte[]>> messages) {
+    LOG.info("HIIIIII---- {}", messages.get(0).topic());
     try {
       final var records =
           messages.stream()
@@ -51,6 +53,6 @@ public class ZeebeKafkaService {
     var collect =
         records.stream()
             .collect(Collectors.groupingBy(Record::getValueType, Collectors.counting()));
-    LOG.debug("=== Got batch of messages from kafka: {}", collect);
+    LOG.info("=== Got batch of messages from kafka: {}", collect);
   }
 }

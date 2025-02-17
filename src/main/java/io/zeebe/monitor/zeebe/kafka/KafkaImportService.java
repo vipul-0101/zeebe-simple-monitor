@@ -94,7 +94,10 @@ public class KafkaImportService {
   }
 
   public boolean isAvailableType(ValueType valueType) {
-    return availableValueTypes.contains(valueType);
+    LOG.info("Checking if type '{}' is available", valueType);
+    boolean contains = availableValueTypes.contains(valueType);
+    LOG.info("Checking if type '{}' is available {}", valueType ,contains);
+    return contains;
   }
 
   private CompletableFuture<Void> runAsync(

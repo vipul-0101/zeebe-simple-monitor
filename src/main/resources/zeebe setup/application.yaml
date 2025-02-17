@@ -1,0 +1,12 @@
+zeebe:
+  broker:
+    exporters:
+      kafka:
+        className: io.zeebe.exporters.kafka.KafkaExporter
+        jarPath: exporters/zeebe-kafka-exporter-3.1.1-jar-with-dependencies.jar
+        args:
+          producer:
+            config: |
+              linger.ms: 5
+              buffer.memory: 8388608
+              batch.size: 32768

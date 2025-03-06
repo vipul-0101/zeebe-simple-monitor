@@ -7,7 +7,7 @@ zeebe:
       hazelcast:
         connection: localhost:5701
         clusterName: dev
-        connectionTimeout: PT30S
+        connectionTimeout: PT1M
       redis:
         connection: redis://localhost:6379
 
@@ -18,18 +18,19 @@ zeebe:
 zeebe-importer: kafka
 
 spring:
+  output.ansi.enabled: ALWAYS
   profiles:
     active: kafka
   datasource:
-    url: jdbc:h2:mem:zeebe-monitor;DB_CLOSE_DELAY=-1
-    username: sa
-    password:
-    driverClassName: org.h2.Driver
+    url: jdbc:postgresql://localhost:5432/monitor
+    username: zeebe
+    password: zeebe
+    driverClassName: org.postgresql.Driver
 
   jpa:
-    database-platform: org.hibernate.dialect.H2Dialect
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: create
 
   mustache:
     prefix: classpath:/templates/
@@ -45,7 +46,7 @@ spring:
   kafka:
     template:
       default-topic: zeebe
-    bootstrap-servers: localhost:9094
+    bootstrap-servers: b-1.zeebe.gprf4j.c3.kafka.ap-south-1.amazonaws.com:9092,b-3.zeebe.gprf4j.c3.kafka.ap-south-1.amazonaws.com:9092,b-2.zeebe.gprf4j.c3.kafka.ap-south-1.amazonaws.com:9092
     properties:
       request.timeout.ms: 20000
       retry.backoff.ms: 500
@@ -79,7 +80,6 @@ logging:
     root: INFO
     io.zeebe: INFO
     io.zeebe.monitor: DEBUG
-    com.hazelcast: WARN
 
 management:
   endpoints:
